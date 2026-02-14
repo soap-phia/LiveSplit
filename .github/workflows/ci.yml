@@ -32,7 +32,7 @@ jobs:
 
             - name: Build LiveSplit
               run: >
-                  dotnet build \
+                  dotnet publish \
                     -v m \
                     -c Release \
                     -p:DebugType=None \
@@ -42,7 +42,7 @@ jobs:
 
             - name: Build UpdateManager
               run: >
-                  dotnet build \
+                  dotnet publish \
                     -v m \
                     -c UpdateManagerExe \
                     -p:DebugType=None \
@@ -55,7 +55,6 @@ jobs:
                   dotnet test \
                     -v m \
                     -c Release \
-                    --no-restore --no-build \
                     ./LiveSplit.sln
 
             - name: Upload build as an artifact
@@ -73,7 +72,7 @@ jobs:
             - name: Upload build to LiveSplit.github.io
               if: github.repository == 'LiveSplit/LiveSplit' && github.ref == 'refs/heads/master'
               run: |
-                  zip -r LiveSplitDevBuild.zip ./bin/Release/*
+                  zip -r LiveSplitDevBuild.zip ./bin/Release/net*/linux-x64/publish/*
                   git config --global user.email "action@github.com"
                   git config --global user.name "GitHub Action"
                   git clone -q --branch master --single-branch "https://github.com/LiveSplit/LiveSplit.github.io.git"
