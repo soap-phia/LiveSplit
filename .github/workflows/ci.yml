@@ -4,13 +4,13 @@ on:
     pull_request:
     push:
         branches:
-            - 'master'
+            - "master"
         tags:
-            - '*'
+            - "*"
 
 jobs:
     build:
-        runs-on: ubuntu-latest
+        runs-on: windows-latest
 
         steps:
             - name: Checkout LiveSplit
@@ -28,58 +28,58 @@ jobs:
             - name: Set up .NET environment
               uses: actions/setup-dotnet@v4
               with:
-                  dotnet-version: '8.x'
+                  dotnet-version: "8.x"
 
-            - name: Build LiveSplit
+            - name: Publish LiveSplit for Linux
               run: >
-                  dotnet publish \
-                    -v m \
-                    -c Release \
-                    -p:DebugType=None \
-                    -r linux-x64 \
-                    --self-contained false \
-                    ./LiveSplit.sln
+                  dotnet publish
+                  -v m
+                  -c Release
+                  -p:DebugType=None
+                  -r linux-x64
+                  --self-contained false
+                  .\LiveSplit.sln
 
-            - name: Build UpdateManager
+            - name: Publish UpdateManager for Linux
               run: >
-                  dotnet publish \
-                    -v m \
-                    -c UpdateManagerExe \
-                    -p:DebugType=None \
-                    -r linux-x64 \
-                    --self-contained false \
-                    ./src/UpdateManager/UpdateManager.csproj
+                  dotnet publish
+                  -v m
+                  -c UpdateManagerExe
+                  -p:DebugType=None
+                  -r linux-x64
+                  --self-contained false
+                  .\src\UpdateManager\UpdateManager.csproj
 
             - name: Run tests
               run: >
-                  dotnet test \
-                    -v m \
-                    -c Release \
-                    ./LiveSplit.sln
+                  dotnet test
+                  -v m
+                  -c Release
+                  .\LiveSplit.sln
 
             - name: Upload build as an artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: LiveSplit_Build
-                  path: ./bin/Release
+                  name: LiveSplit_Build_Linux
+                  path: .\artifacts\publish\LiveSplit\release_linux-x64
 
             - name: Upload UpdateManager as an artifact
               uses: actions/upload-artifact@v4
               with:
-                  name: UpdateManager
-                  path: ./bin/UpdateManagerExe
+                  name: UpdateManager_Linux
+                  path: .\artifacts\publish\UpdateManager\release_linux-x64
 
             - name: Upload build to LiveSplit.github.io
               if: github.repository == 'LiveSplit/LiveSplit' && github.ref == 'refs/heads/master'
               run: |
-                  zip -r LiveSplitDevBuild.zip ./bin/Release/net*/linux-x64/publish/*
+                  7z a LiveSplitDevBuild_Linux.zip .\artifacts\publish\LiveSplit\release_linux-x64\*
                   git config --global user.email "action@github.com"
                   git config --global user.name "GitHub Action"
                   git clone -q --branch master --single-branch "https://github.com/LiveSplit/LiveSplit.github.io.git"
                   cd LiveSplit.github.io
                   git checkout -q --orphan artifacts
                   git reset
-                  mv ../LiveSplitDevBuild.zip .
-                  git add LiveSplitDevBuild.zip
-                  git commit -m "Add Development Build"
+                  mv ../LiveSplitDevBuild_Linux.zip . -force
+                  git add LiveSplitDevBuild_Linux.zip
+                  git commit -m "Add Linux Development Build"
                   git push -q --force https://action:${{ secrets.DEV_BUILD_UPLOAD }}@github.com/LiveSplit/LiveSplit.github.io.git
